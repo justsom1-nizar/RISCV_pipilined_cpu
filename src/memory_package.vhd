@@ -35,42 +35,43 @@ package memory_package is
             x"01800313", --addi x6, x0, 24
             x"01800313", --addi x6, x0, 24
             x"01800313", --addi x6, x0, 24
-            x"0401f293",  --andi x4, x3, 64 
-            x"01800313", --dummy
-            x"01800313", --dummy
-            x"01800313", --dummy
-            x"01800313", --dummy
-            x"03f1e293",  --ORI x5, x3, 63 
+            x"00fc8137",  --lui x2, 0x00FC8
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy 
-            x"03f1c293",  --XORI x5, x3, 63
+            x"10010193",  --addi x3, x2, 0x100
+            x"01800313", --dummy
+            x"01800313", --dummy
+            x"01800313", --dummy
+            x"01800313", --dummy
+            x"00012383",  --lw x7, 0(x2)
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy 
-            x"00c19213",  --SLLI x4, x3, 12
+            x"00011403",  --lh x8, 0(x2)
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy 
-            x"0011d213",  --SRLI x4, x3, 1
+            x"00010483",  --lb x9, 0(x2)
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy 
-            x"4011d213",  --SRAI x4, x3, 1
+            x"0071a023",  --sw x7, 0(x3)
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy 
-            x"03f1a213",  --SLTI x4, x3, 63
+            x"00719223",  --sh x7, 4(x3)
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy
             x"01800313", --dummy 
-            x"03f1b213"  --SLTIU x4, x3, 63
+            x"00718423"   --sb x7, 8(x3)
+
             
 
         );
@@ -90,7 +91,7 @@ package memory_package is
     
     -- put the constant data content here, its size must fit DATA_ROM_MEMORY_SIZE_BYTES
     constant DATA_ROM_MEMORY_CONTENT : DATA_ROM_MEMORY_ARRAY_t := (
-            (x"00", x"00", x"00", x"07"),
+            (x"15", x"20", x"F5", x"07"),
             (x"00", x"00", x"00", x"0b")
         );
 
