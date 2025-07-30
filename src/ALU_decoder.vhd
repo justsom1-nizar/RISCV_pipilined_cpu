@@ -46,6 +46,8 @@ architecture Behavioral of ALU_decoder is
     constant BYTE : std_logic_vector(2 downto 0) := "000"; -- Byte access
     constant HALFWORD : std_logic_vector(2 downto 0) := "001"; -- Halfword access
     constant WORD : std_logic_vector(2 downto 0) := "010"; -- Word access
+    constant UNSIGNED_BYTE : std_logic_vector(2 downto 0) := "100"; -- Unsigned byte access
+    constant UNSIGNED_HALFWORD : std_logic_vector(2 downto 0) := "101"; -- Unsigned halfword access
 begin
     process(ALU_op, funct3, funct7_bit5, op_bit5)
     begin
@@ -59,6 +61,12 @@ begin
                 when WORD =>
                     -- Word access
                     access_width <= MEM_ACCESS_WIDTH_32;
+                when UNSIGNED_BYTE =>
+                    -- Unsigned byte access
+                    access_width <= MEM_ACCESS_WIDTH_8_UNSIGNED;
+                when UNSIGNED_HALFWORD =>
+                    -- Unsigned halfword access
+                    access_width <= MEM_ACCESS_WIDTH_16_UNSIGNED;
                 when others =>
                     -- Default to word access
                     access_width <= MEM_ACCESS_WIDTH_32;
