@@ -55,7 +55,7 @@ begin
     data_out <= 
         -- forbidding unaligned access
         (others => '1') when word_index >= DATA_RAM_MEMORY_SIZE_WORDS 
-                            or (access_width = MEM_ACCESS_WIDTH_16 and addr(0) = '1')
+                            or ((access_width = MEM_ACCESS_WIDTH_16 or access_width = MEM_ACCESS_WIDTH_16_UNSIGNED) and addr(0) = '1')
                             or (access_width = MEM_ACCESS_WIDTH_32 and addr(1 downto 0) /= "00") else
                             
        -- 16-bit unisigned
