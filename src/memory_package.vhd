@@ -10,8 +10,25 @@ package memory_package is
     type MEMORY_ACCESS_TYPE_t  is (MEMORY_ACCESS_TYPE_READ, MEMORY_ACCESS_TYPE_WRITE);
 
     constant DATA_MEMORY_BASE_ADDRESS : integer := 16#00FC8000#;
+    type ALU_OP_SRC_t is (ALU_OP_SRC_IMM, ALU_OP_SRC_ALU_RES, ALU_OP_SRC_REG, ALU_OP_SRC_PC_IMM, ALU_OP_SRC_PC_4, ALU_OP_SRC_RD_DATA);
+    constant PC_PLUS_4      : std_logic_vector(1 downto 0) := "00";       -- Next sequential instruction
+    constant PC_TARGET      : std_logic_vector(1 downto 0) := "01";       -- Branch target address
+    constant PC_ALU      : std_logic_vector(1 downto 0) := "10";       -- Jump target address
+
     
-    
+    -- RISC-V Opcode Constants
+    constant OP_BRANCH      : std_logic_vector(6 downto 0) := "1100011";  -- Branch instructions
+    constant OP_JAL         : std_logic_vector(6 downto 0) := "1101111";  -- Jump and Link
+    constant OP_JALR        : std_logic_vector(6 downto 0) := "1100111";  -- Jump and Link Register
+
+
+    -- Branch Type Constants (funct3 field)
+    constant BRANCH_BEQ     : std_logic_vector(2 downto 0) := "000";      -- Branch if Equal
+    constant BRANCH_BNE     : std_logic_vector(2 downto 0) := "001";      -- Branch if Not Equal
+    constant BRANCH_BLT     : std_logic_vector(2 downto 0) := "100";      -- Branch if Less Than
+    constant BRANCH_BGE     : std_logic_vector(2 downto 0) := "101";      -- Branch if Greater or Equal
+    constant BRANCH_BLTU    : std_logic_vector(2 downto 0) := "110";      -- Branch if Less Than Unsigned
+    constant BRANCH_BGEU    : std_logic_vector(2 downto 0) := "111";      -- Branch if Greater or Equal Unsigned
 ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 ------------------------------------ Instruction memory -------------------------------------------------------------

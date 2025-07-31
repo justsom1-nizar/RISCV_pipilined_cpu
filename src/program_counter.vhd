@@ -30,6 +30,7 @@ entity program_counter is
         clk         : in std_logic;
         rst         : in std_logic;
         pc_next     : in std_logic_vector(31 downto 0);
+        stall_pc   : in std_logic;
         pc          : out std_logic_vector(31 downto 0)
     );
 end program_counter;
@@ -47,7 +48,9 @@ begin
         if rst = '1' then
             pc_signal <= (others => '0');
         elsif rising_edge(clk) then
-            pc_signal <= pc_next;
+            if stall_pc = '0' then
+                pc_signal <= pc_next;
+            end if;
         end if;
     end process;
     
