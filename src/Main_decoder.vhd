@@ -21,7 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
+use work.memory_package.all;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -49,42 +49,7 @@ entity Main_decoder is
 end Main_decoder;
 
 architecture Behavioral of Main_decoder is
--- RISC-V Instruction Type Opcodes (7 bits)
-    constant OP_R_TYPE    : std_logic_vector(6 downto 0) := "0110011"; -- R-type (ADD, SUB, etc.)
-    constant OP_I_TYPE    : std_logic_vector(6 downto 0) := "0010011"; -- I-type (ADDI, etc.)
-    constant OP_LOAD      : std_logic_vector(6 downto 0) := "0000011"; -- Load instructions
-    constant OP_STORE     : std_logic_vector(6 downto 0) := "0100011"; -- Store instructions
-    constant OP_BRANCH    : std_logic_vector(6 downto 0) := "1100011"; -- Branch instructions
-    constant OP_JAL       : std_logic_vector(6 downto 0) := "1101111"; -- JAL
-    constant OP_JALR      : std_logic_vector(6 downto 0) := "1100111"; -- JALR
-    constant OP_LUI       : std_logic_vector(6 downto 0) := "0110111"; -- LUI
-    constant OP_AUIPC     : std_logic_vector(6 downto 0) := "0010111"; -- AUIPC
-    
-    -- Immediate source select constants
-    constant IMM_I_TYPE   : std_logic_vector(2 downto 0) := "000"; -- I-type immediate
-    constant IMM_S_TYPE   : std_logic_vector(2 downto 0) := "001"; -- S-type immediate
-    constant IMM_B_TYPE   : std_logic_vector(2 downto 0) := "010"; -- B-type immediate
-    constant IMM_J_TYPE   : std_logic_vector(2 downto 0) := "011"; -- J-type immediate
-    constant IMM_U_TYPE   : std_logic_vector(2 downto 0) := "100"; -- U-type immediate
-   
-        -- ALU_op codes
-    constant ALUOP_ADD    : std_logic_vector(1 downto 0) := "00"; -- Addition (loads/stores)
-    constant ALUOP_BRANCH   : std_logic_vector(1 downto 0) := "01"; -- Subtraction (branches)
-    constant ALUOP_FUNCT  : std_logic_vector(1 downto 0) := "10"; -- Function field decode (R/I-type)
-    
-        -- Single bit control signal constants
-    constant ENABLE       : std_logic := '1';
-    constant DISABLE      : std_logic := '0';
-    
-    -- Result source constants
-    constant RESULT_ALU   : std_logic_vector(2 downto 0) := "000"; -- Use ALU result
-    constant RESULT_MEM   : std_logic_vector(2 downto 0) := "001"; -- Use memory data
-    constant RESULT_PCplus4   : std_logic_vector(2 downto 0) := "010"; -- Use memory data
-    constant RESULT_IMM   : std_logic_vector(2 downto 0) := "011"; -- Use memory data
-    constant RESULT_PC_target : std_logic_vector(2 downto 0) := "100"; -- Use target address for JAL or JALR
-    -- ALU source constants
-    constant ALU_SRC_REG  : std_logic := '0'; -- Use register for ALU src B
-    constant ALU_SRC_IMM  : std_logic := '1'; -- Use immediate for ALU src B
+
 begin
     
     process(op)

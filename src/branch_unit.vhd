@@ -51,14 +51,18 @@ begin
             when OP_BRANCH =>
                 case branch_type is
                     when BRANCH_BEQ =>
-                        if alu_zero_flag = '0' then
+                        if alu_zero_flag = '1' then
+                            next_pc_sel <= PC_TARGET;
+                        else
                             next_pc_sel <= PC_PLUS_4;
                         end if;
                     when BRANCH_BNE =>
-                        if alu_zero_flag = '1' then
+                        if alu_zero_flag = '0' then
+                            next_pc_sel <= PC_TARGET;
+                        else
                             next_pc_sel <= PC_PLUS_4;
-
                         end if;
+
                     when BRANCH_BLT |  BRANCH_BLTU =>
                         if signed(alu_result) = 1 then
                             next_pc_sel <= PC_TARGET;
