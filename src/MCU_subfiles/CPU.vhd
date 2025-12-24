@@ -32,24 +32,30 @@ use work.memory_package.all;
 
 entity data_path is
   port (
-    clk          : in std_logic;
-    rst          : in std_logic;
-    data_XOR_out : out std_logic
+    clk                             : in std_logic;
+    rst                             : in std_logic;
+    instruction_memory_CPU_in       : in std_logic_vector(31 downto 0);
+    PC_CPU_out                      : out std_logic_vector(31 downto 0);
+    data_memory_CPU_in              : in std_logic_vector(31 downto 0);
+    data_memory_CPU_out             : out std_logic_vector(31 downto 0);
+    addr_memory_CPU_out             : out std_logic_vector(31 downto 0);
+    access_width_memory_CPU_out     : out MEM_ACCESS_WIDTH_t;
+    mem_write_enable_memory_CPU_out : out std_logic
   );
 end data_path;
 
 architecture Behavioral of data_path is
   --hazard control signals
-  signal sel_alu_src1 : ALU_OP_SRC_t; -- Select signal for ALU input 1 mux
-  signal sel_alu_src2 : ALU_OP_SRC_t; -- Select signal for ALU input 2 mux
-  signal stall_f_pc   : std_logic;    -- Stall signal for pipeline
-  signal flush_fetch  : std_logic;    -- Flush signal for fetch stage
-  signal flush_decode : std_logic;    -- Flush signal for decode stage
-  signal srcB_mux : std_logic_vector(31 downto 0); -- Mux output for srcB in ALU
+  signal sel_alu_src1    : ALU_OP_SRC_t; -- Select signal for ALU input 1 mux
+  signal sel_alu_src2    : ALU_OP_SRC_t; -- Select signal for ALU input 2 mux
+  signal stall_f_pc      : std_logic; -- Stall signal for pipeline
+  signal flush_fetch     : std_logic; -- Flush signal for fetch stage
+  signal flush_decode    : std_logic; -- Flush signal for decode stage
+  signal srcB_mux        : std_logic_vector(31 downto 0); -- Mux output for srcB in ALU
   signal reg_decode_src1 : REG_DECODE_SOURCE_t; -- Register decode source for src1
   signal reg_decode_src2 : REG_DECODE_SOURCE_t; -- Register decode source for src2
   --  fetch signals
-  signal pc_next_signal_fetch        : std_logic_vector(31 downto 0):= (others => '0');
+  signal pc_next_signal_fetch        : std_logic_vector(31 downto 0) := (others => '0');
   signal pc_signal_fetch             : std_logic_vector(31 downto 0) := (others => '0');
   signal PCplus4_signal_fetch        : std_logic_vector(31 downto 0);
   signal executing_instruction_fetch : std_logic_vector(31 downto 0);
@@ -59,10 +65,10 @@ architecture Behavioral of data_path is
   signal PCplus4_signal_decode        : std_logic_vector(31 downto 0);
   signal ImmOut_decode                : std_logic_vector(31 downto 0);
   --    register signals
-  signal data_read_reg1               : std_logic_vector(31 downto 0);
-  signal data_read_reg2               : std_logic_vector(31 downto 0);
-  signal sig_read_reg1_decode         : std_logic_vector(4 downto 0);
-  signal sig_read_reg2_decode         : std_logic_vector(4 downto 0);
+  signal data_read_reg1        : std_logic_vector(31 downto 0);
+  signal data_read_reg2        : std_logic_vector(31 downto 0);
+  signal sig_read_reg1_decode  : std_logic_vector(4 downto 0);
+  signal sig_read_reg2_decode  : std_logic_vector(4 downto 0);
   signal sig_write_reg_decode  : std_logic_vector(4 downto 0);
   signal sig_read_data1_decode : std_logic_vector(31 downto 0);
   signal sig_read_data2_decode : std_logic_vector(31 downto 0);
@@ -78,7 +84,7 @@ architecture Behavioral of data_path is
   signal sig_reg_write_en_decode : std_logic;
   signal branch_decode           : std_logic;
   signal jump_decode             : std_logic;
-  signal access_width_decode            : MEM_ACCESS_WIDTH_t;
+  signal access_width_decode     : MEM_ACCESS_WIDTH_t;
   --  execute signals
   signal pc_signal_execute      : std_logic_vector(31 downto 0);
   signal pc_target_execute      : std_logic_vector(31 downto 0);
@@ -98,15 +104,15 @@ architecture Behavioral of data_path is
   signal sig_reg_write_en_execute : std_logic;
   signal branch_execute           : std_logic;
   signal jump_execute             : std_logic;
-  signal PC_source_execute        : std_logic_vector(1 downto 0):=PC_PLUS_4;
+  signal PC_source_execute        : std_logic_vector(1 downto 0) := PC_PLUS_4;
   signal PC_IMM_execute           : std_logic_vector(31 downto 0);
-  signal ALU_result_execute : std_logic_vector(31 downto 0);
-  signal ALU_zero_execute   : std_logic;
-  signal srcA               : std_logic_vector(31 downto 0);
-  signal srcB               : std_logic_vector(31 downto 0);
-  signal access_width_execute           : MEM_ACCESS_WIDTH_t;
-  signal op_execute           : std_logic_vector(6 downto 0);
-  signal funct3_execute      : std_logic_vector(2 downto 0);
+  signal ALU_result_execute       : std_logic_vector(31 downto 0);
+  signal ALU_zero_execute         : std_logic;
+  signal srcA                     : std_logic_vector(31 downto 0);
+  signal srcB                     : std_logic_vector(31 downto 0);
+  signal access_width_execute     : MEM_ACCESS_WIDTH_t;
+  signal op_execute               : std_logic_vector(6 downto 0);
+  signal funct3_execute           : std_logic_vector(2 downto 0);
   --  
   -- memory signals   
   signal PCplus4_signal_memory      : std_logic_vector(31 downto 0);
@@ -114,52 +120,50 @@ architecture Behavioral of data_path is
   signal sig_data_written_to_memory : std_logic_vector(31 downto 0);
   signal ALU_result_memory          : std_logic_vector(31 downto 0);
   signal sig_write_reg_memory       : std_logic_vector(4 downto 0);
-  signal ImmOut_memory        : std_logic_vector(31 downto 0);
-  signal pc_target_memory    : std_logic_vector(31 downto 0);
+  signal ImmOut_memory              : std_logic_vector(31 downto 0);
+  signal pc_target_memory           : std_logic_vector(31 downto 0);
   --    control unit
   signal result_src_memory       : std_logic_vector(2 downto 0);
   signal Mem_write_memory        : std_logic;
   signal sig_reg_write_en_memory : std_logic;
-  signal access_width_memory            : MEM_ACCESS_WIDTH_t;
+  signal access_width_memory     : MEM_ACCESS_WIDTH_t;
 
   -- writeback signals   
   signal PCplus4_signal_writeback            : std_logic_vector(31 downto 0);
   signal sig_data_read_from_memory_writeback : std_logic_vector(31 downto 0);
   signal ALU_result_writeback                : std_logic_vector(31 downto 0);
   signal sig_write_reg_writeback             : std_logic_vector(4 downto 0);
-  signal ImmOut_writeback       : std_logic_vector(31 downto 0);
-  signal pc_target_writeback   : std_logic_vector(31 downto 0);
+  signal ImmOut_writeback                    : std_logic_vector(31 downto 0);
+  signal pc_target_writeback                 : std_logic_vector(31 downto 0);
   --    control unit
   signal result_src_writeback       : std_logic_vector(2 downto 0);
   signal sig_reg_write_en_writeback : std_logic;
   signal final_result_writeback     : std_logic_vector(31 downto 0);
-
-
 begin
-  process (final_result_writeback)
-    variable temp : std_logic;
-  begin
-    temp := '0';
-    for i in final_result_writeback'range loop
-      temp := temp xor final_result_writeback(i);
-    end loop;
-    data_XOR_out <= temp;
-  end process;
+  -- data memory CPU interface
+  data_memory_CPU_out             <= sig_data_written_to_memory; -- data_in  => sig_data_written_to_memory,
+  sig_data_read_from_memory       <= data_memory_CPU_in; -- data_out => sig_data_read_from_memory
+  addr_memory_CPU_out             <= ALU_result_memory; -- addr  => ALU_result_memory,
+  access_width_memory_CPU_out     <= access_width_memory;-- access_width => access_width_memory,
+  mem_write_enable_memory_CPU_out <= Mem_write_memory;-- mem_write_enable       => Mem_write_memory,
+  -- instruction memory CPU interface
+  executing_instruction_fetch <= instruction_memory_CPU_in; -- instruction_memory_CPU_in
+  PC_CPU_out                  <= pc_signal_fetch; -- pc_signal_fetch
   -- fetch
   PCplus4_signal_fetch <= std_logic_vector(unsigned(pc_signal_fetch) + 4);
   -- decode
   op                   <= executing_instruction_decode(6 downto 0);
   funct3               <= executing_instruction_decode(14 downto 12);
   funct7               <= executing_instruction_decode(31 downto 25);
-  sig_read_reg1_decode        <= executing_instruction_decode(19 downto 15);
-  sig_read_reg2_decode        <= executing_instruction_decode(24 downto 20);
+  sig_read_reg1_decode <= executing_instruction_decode(19 downto 15);
+  sig_read_reg2_decode <= executing_instruction_decode(24 downto 20);
   sig_write_reg_decode <= executing_instruction_decode(11 downto 7);
 
   -- execute
   -- srcA mux for hazard forwarding
 
   pc_target_execute <= std_logic_vector(unsigned(pc_signal_execute) + unsigned(ImmOut_execute));
-  PC_IMM_execute <=ALU_result_execute(31 downto 1) & "0"; -- For JALR instruction
+  PC_IMM_execute    <= ALU_result_execute(31 downto 1) & "0"; -- For JALR instruction
 
   -- Fetch to Decode Pipeline Register
   fetch_to_decode_reg : process (clk, rst)
@@ -195,7 +199,7 @@ begin
       sig_read_data2_execute   <= (others => '0');
       result_src_execute       <= (others => '0');
       Mem_write_execute        <= '0';
-      ALU_control_execute      <=ALU_OP_TYPE_ADD;
+      ALU_control_execute      <= ALU_OP_TYPE_ADD;
       ALU_src_execute          <= '0';
       sig_reg_write_en_execute <= '0';
       branch_execute           <= '0';
@@ -210,14 +214,14 @@ begin
         sig_read_data2_execute   <= (others => '0');
         result_src_execute       <= (others => '0');
         Mem_write_execute        <= '0';
-        ALU_control_execute      <=ALU_OP_TYPE_ADD;
+        ALU_control_execute      <= ALU_OP_TYPE_ADD;
         ALU_src_execute          <= '0';
         sig_reg_write_en_execute <= '0';
         branch_execute           <= '0';
         jump_execute             <= '0';
         op_execute               <= (others => '0');
         funct3_execute           <= (others => '0');
-      else 
+      else
         pc_signal_execute        <= pc_signal_decode;
         PCplus4_signal_execute   <= PCplus4_signal_decode;
         ImmOut_execute           <= ImmOut_decode;
@@ -232,10 +236,10 @@ begin
         branch_execute           <= branch_decode;
         jump_execute             <= jump_decode;
         access_width_execute     <= access_width_decode;
-        sig_read_reg1_execute <= sig_read_reg1_decode;
-        sig_read_reg2_execute <= sig_read_reg2_decode;
-        op_execute <= op;
-        funct3_execute <= funct3;
+        sig_read_reg1_execute    <= sig_read_reg1_decode;
+        sig_read_reg2_execute    <= sig_read_reg2_decode;
+        op_execute               <= op;
+        funct3_execute           <= funct3;
       end if;
     end if;
   end process;
@@ -259,9 +263,9 @@ begin
       result_src_memory          <= result_src_execute;
       Mem_write_memory           <= Mem_write_execute;
       sig_reg_write_en_memory    <= sig_reg_write_en_execute;
-      ImmOut_memory              <= ImmOut_execute; 
-      pc_target_memory<= pc_target_execute;
-      access_width_memory <= access_width_execute;
+      ImmOut_memory              <= ImmOut_execute;
+      pc_target_memory           <= pc_target_execute;
+      access_width_memory        <= access_width_execute;
     end if;
   end process;
 
@@ -282,41 +286,41 @@ begin
       sig_write_reg_writeback             <= sig_write_reg_memory;
       result_src_writeback                <= result_src_memory;
       sig_reg_write_en_writeback          <= sig_reg_write_en_memory;
-      ImmOut_writeback                    <= ImmOut_memory; 
-      pc_target_writeback<= pc_target_memory;
+      ImmOut_writeback                    <= ImmOut_memory;
+      pc_target_writeback                 <= pc_target_memory;
     end if;
   end process;
   process (ALU_src_execute, PC_source_execute, result_src_writeback,
-           sig_read_data2_execute, ImmOut_execute, ALU_result_writeback,
-           sig_data_read_from_memory_writeback, PCplus4_signal_writeback,
-           pc_target_execute, PCplus4_signal_fetch, ImmOut_writeback,
-           pc_target_writeback, PC_IMM_execute,sel_alu_src1,reg_decode_src1,reg_decode_src2,PC_source_execute,
-           sig_read_data1_execute, sig_read_data2_execute, ALU_result_memory,
-           final_result_writeback,srcB_mux,data_read_reg1,data_read_reg2,pc_target_memory,sel_alu_src2,ImmOut_memory,
-           PCplus4_signal_memory)
+    sig_read_data2_execute, ImmOut_execute, ALU_result_writeback,
+    sig_data_read_from_memory_writeback, PCplus4_signal_writeback,
+    pc_target_execute, PCplus4_signal_fetch, ImmOut_writeback,
+    pc_target_writeback, PC_IMM_execute, sel_alu_src1, reg_decode_src1, reg_decode_src2, PC_source_execute,
+    sig_read_data1_execute, sig_read_data2_execute, ALU_result_memory,
+    final_result_writeback, srcB_mux, data_read_reg1, data_read_reg2, pc_target_memory, sel_alu_src2, ImmOut_memory,
+    PCplus4_signal_memory)
   begin
-      -- hazard forwarding
-  case reg_decode_src1 is
-    when REG_DECODE_SOURCE_REGISTER =>
-      sig_read_data1_decode <= data_read_reg1;
-    when REG_DECODE_SOURCE_WRITEBACK =>
-      sig_read_data1_decode <= final_result_writeback;
-  end case;
+    -- hazard forwarding
+    case reg_decode_src1 is
+      when REG_DECODE_SOURCE_REGISTER =>
+        sig_read_data1_decode <= data_read_reg1;
+      when REG_DECODE_SOURCE_WRITEBACK =>
+        sig_read_data1_decode <= final_result_writeback;
+    end case;
 
-  case reg_decode_src2 is
-    when REG_DECODE_SOURCE_REGISTER =>
-      sig_read_data2_decode <= data_read_reg2;
-    when REG_DECODE_SOURCE_WRITEBACK =>
-      sig_read_data2_decode <= final_result_writeback;
-  end case;
+    case reg_decode_src2 is
+      when REG_DECODE_SOURCE_REGISTER =>
+        sig_read_data2_decode <= data_read_reg2;
+      when REG_DECODE_SOURCE_WRITEBACK =>
+        sig_read_data2_decode <= final_result_writeback;
+    end case;
     --   srcA mux decode
-    
+
     case sel_alu_src1 is
-      when ALU_OP_SRC_REG =>  -- normal: use read_data1 from execute stage
+      when ALU_OP_SRC_REG => -- normal: use read_data1 from execute stage
         srcA <= sig_read_data1_execute;
-      when ALU_OP_SRC_ALU_RES =>  -- forward from memory stage
+      when ALU_OP_SRC_ALU_RES => -- forward from memory stage
         srcA <= ALU_result_memory;
-      when ALU_OP_SRC_RD_DATA =>  -- forward from writeback stage
+      when ALU_OP_SRC_RD_DATA => -- forward from writeback stage
         srcA <= final_result_writeback;
       when ALU_OP_SRC_IMM =>
         srcA <= ImmOut_memory;
@@ -327,11 +331,11 @@ begin
     end case;
     --   srcB mux execute
     case sel_alu_src2 is
-      when ALU_OP_SRC_REG =>  -- normal: use read_data2 from execute stage
+      when ALU_OP_SRC_REG => -- normal: use read_data2 from execute stage
         srcB_mux <= sig_read_data2_execute;
-      when ALU_OP_SRC_ALU_RES =>  -- forward from memory stage
+      when ALU_OP_SRC_ALU_RES => -- forward from memory stage
         srcB_mux <= ALU_result_memory;
-      when ALU_OP_SRC_RD_DATA =>  -- forward from writeback stage
+      when ALU_OP_SRC_RD_DATA => -- forward from writeback stage
         srcB_mux <= final_result_writeback;
       when ALU_OP_SRC_IMM =>
         srcB_mux <= ImmOut_memory;
@@ -342,7 +346,7 @@ begin
     end case;
     --   ALUsrc mux execute
     if ALU_src_execute = '0' then
-      srcB <= srcB_mux;   
+      srcB <= srcB_mux;
     else
       srcB <= ImmOut_execute;
     end if;
@@ -374,55 +378,56 @@ begin
     end if;
   end process;
 
-  Hazard_control_unit_inst: entity work.Hazard_control_unit
-   port map(
+  Hazard_control_unit_inst : entity work.Hazard_control_unit
+    port map
+    (
       -- Inputs
-      rs1_decode => sig_read_reg1_decode,
-      rs2_decode => sig_read_reg2_decode,
-      rs1_execute => sig_read_reg1_execute,
-      rs2_execute => sig_read_reg2_execute,
-      rd_execute => sig_write_reg_execute,
-      sig_reg_write_en_execute => sig_reg_write_en_execute,
-      result_src_execute => result_src_execute,
-      next_pc_sel => PC_source_execute,
-      rd_memory => sig_write_reg_memory,
-      sig_reg_write_en_memory => sig_reg_write_en_memory,
-      result_src_memory => result_src_memory,
-      rd_writeback => sig_write_reg_writeback,
+      rs1_decode                 => sig_read_reg1_decode,
+      rs2_decode                 => sig_read_reg2_decode,
+      rs1_execute                => sig_read_reg1_execute,
+      rs2_execute                => sig_read_reg2_execute,
+      rd_execute                 => sig_write_reg_execute,
+      sig_reg_write_en_execute   => sig_reg_write_en_execute,
+      result_src_execute         => result_src_execute,
+      next_pc_sel                => PC_source_execute,
+      rd_memory                  => sig_write_reg_memory,
+      sig_reg_write_en_memory    => sig_reg_write_en_memory,
+      result_src_memory          => result_src_memory,
+      rd_writeback               => sig_write_reg_writeback,
       sig_reg_write_en_writeback => sig_reg_write_en_writeback,
       -- Outputs
       reg_decode_src1 => reg_decode_src1,
       reg_decode_src2 => reg_decode_src2,
-      sel_alu_src1 => sel_alu_src1,
-      sel_alu_src2 => sel_alu_src2,
-      stall_f_pc => stall_f_pc,
-      flush_fetch => flush_fetch,
-      flush_decode => flush_decode
-  );
+      sel_alu_src1    => sel_alu_src1,
+      sel_alu_src2    => sel_alu_src2,
+      stall_f_pc      => stall_f_pc,
+      flush_fetch     => flush_fetch,
+      flush_decode    => flush_decode
+    );
   brnaching_unit : entity work.branch_unit(Behavioral)
     port map
     (
-      opcode          => op_execute,
-      branch_type     => funct3_execute,
-      alu_result      => ALU_result_execute,
-      alu_zero_flag   => ALU_zero_execute,
-      next_pc_sel     => PC_source_execute
+      opcode        => op_execute,
+      branch_type   => funct3_execute,
+      alu_result    => ALU_result_execute,
+      alu_zero_flag => ALU_zero_execute,
+      next_pc_sel   => PC_source_execute
     );
   program_counter : entity work.program_counter(Behavioral)
     port map
     (
-      clk     => clk,
-      rst     => rst,
-      pc_next => pc_next_signal_fetch,
+      clk      => clk,
+      rst      => rst,
+      pc_next  => pc_next_signal_fetch,
       stall_pc => stall_f_pc,
-      pc      => pc_signal_fetch
+      pc       => pc_signal_fetch
     );
-  instruction_memory : entity work.instruction_memory(Behavioral)
-    port map
-    (
-      addr  => pc_signal_fetch,
-      instr => executing_instruction_fetch
-    );
+  -- instruction_memory : entity work.instruction_memory(Behavioral)
+  --   port map
+  --   (
+  --     addr  => pc_signal_fetch,
+  --     instr => executing_instruction_fetch
+  --   );
   register_file : entity work.register_file(Behavioral)
     port map
     (
@@ -452,16 +457,16 @@ begin
       imm_src => Imm_src_decode,
       imm_out => ImmOut_decode
     );
-  data_memory : entity work.data_memory(Behavioral)
-    port map
-    (
-      clk      => clk,
-      addr     => ALU_result_memory,
-      data_in  => sig_data_written_to_memory,
-      mem_write_enable       => Mem_write_memory,
-      access_width => access_width_memory,
-      data_out => sig_data_read_from_memory
-    );
+  -- data_memory : entity work.data_memory(Behavioral)
+  --   port map
+  --   (
+  --     clk      => clk,
+  --     addr     => ALU_result_memory,
+  --     data_in  => sig_data_written_to_memory,
+  --     mem_write_enable       => Mem_write_memory,
+  --     access_width => access_width_memory,
+  --     data_out => sig_data_read_from_memory
+  --   );
   Control_unit : entity work.Control_unit(Behavioral)
     port map
     (
