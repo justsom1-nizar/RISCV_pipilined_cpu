@@ -119,4 +119,17 @@ package memory_package is
     type DATA_RAM_MEMORY_ARRAY_t is array (0 to DATA_RAM_MEMORY_SIZE_WORDS-1, 3 downto 0) of std_logic_vector(7 downto 0);
 
 
+---------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+------------------------------------------ I2C ----------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+
+    
+    constant I2C_Adress_size : integer := 7;
+    constant I2C_Data_size : integer := 8;
+    constant timeout_limit : integer := 1000; -- in clock cycles
+    type state_type is (IDLE, START, WRITING_BYTE, SLAVE_ACK, MASTER_ACK, READING_BYTE, STOP);
+    --Control registers adresses
+    constant REG_I2C_ADDRESS_ADDR : std_logic_vector(7 downto 0) := x"00"; 
 end package memory_package;
