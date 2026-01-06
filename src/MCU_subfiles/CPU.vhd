@@ -38,7 +38,7 @@ entity data_path is
     PC_CPU_out                      : out std_logic_vector(31 downto 0);
     data_memory_CPU_in              : in std_logic_vector(31 downto 0);
     data_memory_CPU_out             : out std_logic_vector(31 downto 0);
-    addr_memory_CPU_out             : out std_logic_vector(31 downto 0);
+    addr_memory_CPU             : out std_logic_vector(31 downto 0);
     access_width_memory_CPU_out     : out MEM_ACCESS_WIDTH_t;
     mem_write_enable_memory_CPU_out : out std_logic
   );
@@ -143,7 +143,7 @@ begin
   -- data memory CPU interface
   data_memory_CPU_out             <= sig_data_written_to_memory; -- data_in  => sig_data_written_to_memory,
   sig_data_read_from_memory       <= data_memory_CPU_in; -- data_out => sig_data_read_from_memory
-  addr_memory_CPU_out             <= ALU_result_memory; -- addr  => ALU_result_memory,
+  addr_memory_CPU             <= ALU_result_memory; -- addr  => ALU_result_memory,
   access_width_memory_CPU_out     <= access_width_memory;-- access_width => access_width_memory,
   mem_write_enable_memory_CPU_out <= Mem_write_memory;-- mem_write_enable       => Mem_write_memory,
   -- instruction memory CPU interface

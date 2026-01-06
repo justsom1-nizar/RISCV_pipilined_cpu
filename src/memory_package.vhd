@@ -1,7 +1,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
+use ieee.numeric_std.all;
 package memory_package is
     type MEM_ACCESS_WIDTH_t is (MEM_ACCESS_WIDTH_8, MEM_ACCESS_WIDTH_16, MEM_ACCESS_WIDTH_32,
                                 MEM_ACCESS_WIDTH_8_UNSIGNED, MEM_ACCESS_WIDTH_16_UNSIGNED);
@@ -130,6 +130,23 @@ package memory_package is
     constant I2C_Data_size : integer := 8;
     constant timeout_limit : integer := 1000; -- in clock cycles
     type state_type is (IDLE, START, WRITING_BYTE, SLAVE_ACK, MASTER_ACK, READING_BYTE, STOP);
+    constant I2C_MEMORY_SIZE_BYTES     : integer := 12;     
+    type I2C_MEMORY_ARRAY_t is array (0 to I2C_MEMORY_SIZE_BYTES-1) of std_logic_vector(7 downto 0);
+
     --Control registers adresses
-    constant REG_I2C_ADDRESS_ADDR : std_logic_vector(7 downto 0) := x"00"; 
+    constant REG_I2C_ADDR : std_logic_vector(31 downto 0) := x"A0000000";
+    constant REG_I2C_WRITE_DATA_ADDR : std_logic_vector(31 downto 0) := x"A0000004";
+    constant REG_I2C_READ_DATA_ADDR : std_logic_vector(31 downto 0) := 
+        std_logic_vector(unsigned(REG_I2C_WRITE_DATA_ADDR) + I2C_MEMORY_SIZE_BYTES);
+                                    
+    
+
+---------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+------------------------------------ Bus Controller -------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+    constant I2C_ADDR_BASE    : integer := 16#A0#; -- Base address for I2C mapped registers
+    constant MEM_ADDR_BASE    : integer := 16#00#; -- Base address for data memory
+    type BUS_INTERFACE_STATE_t is (BUS_INTERFACE_STATE_IDLE, BUS_INTERFACE_RAM, BUS_INTERFACE_I2C);    
 end package memory_package;

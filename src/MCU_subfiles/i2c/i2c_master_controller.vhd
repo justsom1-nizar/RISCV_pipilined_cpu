@@ -61,7 +61,6 @@ begin
                 SDA <= '0'; 
 
             when WRITING_BYTE =>
-                
                 if bit_cnt >= 0 then
                     SDA <= Byte_to_write(bit_cnt);
                     if bit_cnt = 0 then
