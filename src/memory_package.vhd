@@ -138,7 +138,8 @@ package memory_package is
     constant REG_I2C_WRITE_DATA_ADDR : std_logic_vector(31 downto 0) := x"A0000004";
     constant REG_I2C_READ_DATA_ADDR : std_logic_vector(31 downto 0) := 
         std_logic_vector(unsigned(REG_I2C_WRITE_DATA_ADDR) + I2C_MEMORY_SIZE_BYTES);
-                                    
+    type WRITING_ADDR_TYPE_t is (REG_I2C, REG_I2C_WRITE_DATA,
+                                 REG_I2C_READ_DATA);                                
     
 
 ---------------------------------------------------------------------------------------------------------------------

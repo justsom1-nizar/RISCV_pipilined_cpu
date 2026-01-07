@@ -33,8 +33,11 @@ entity i2c_master_controller is
            Byte_to_write : in STD_LOGIC_VECTOR (I2C_Data_size-1 downto 0);
            lastByte : in STD_LOGIC;
 
+           byteCounter : out integer:= 0;
            currentState : out state_type;
-           Byte_to_read : out STD_LOGIC_VECTOR (I2C_Data_size-1 downto 0));
+           Byte_to_read : out STD_LOGIC_VECTOR (I2C_Data_size-1 downto 0);
+           readingData : out STD_LOGIC
+           );
 end i2c_master_controller;
 
 architecture Behavioral of i2c_master_controller is
@@ -65,6 +68,7 @@ begin
                     SDA <= Byte_to_write(bit_cnt);
                     if bit_cnt = 0 then
                         state <= SLAVE_ACK;
+                        byteCounter <= byteCounter + 1;
                     else
                         bit_cnt <= bit_cnt - 1;
                     end if;
@@ -77,7 +81,8 @@ begin
                         state <= WRITING_BYTE;
                     else
                         state <= READING_BYTE;
-
+                        readingData <= '1';
+                        byteCounter<=0;
                     end if;
                 else
                     state <= STOP;
@@ -87,8 +92,9 @@ begin
                 if lastByte = '0' then
                     bit_cnt <= I2C_Data_size - 1;
                     state <= READING_BYTE;
+                    byteCounter <= byteCounter + 1;
                 else 
-                    state <= READING_BYTE;
+                    state <= STOP;
                 end if;    
             when READING_BYTE =>
                 if bit_cnt >= 0 then
@@ -96,6 +102,7 @@ begin
                     if bit_cnt = 0 then
                         Byte_to_read <= data_reg_Signal;
                         state <= MASTER_ACK;
+                        
                     else
                         bit_cnt <= bit_cnt - 1;
                         state <= READING_BYTE;
